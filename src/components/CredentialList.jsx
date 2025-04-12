@@ -14,7 +14,7 @@ const CredentialList = () => {
       if (contract) {
         try {
           // Fetch revocation fee
-          const fee = await contract.methods.revocationFee().call();
+          const fee = await contract.revocationFee();
           setRevocationFee(ethers.utils.formatEther(fee));
 
           // Fetch credentials
