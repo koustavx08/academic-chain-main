@@ -32,6 +32,10 @@ contract AcademicCredentials is Ownable, Pausable {
     mapping(address => uint256[]) private studentCredentials;    // Maps student address to their credential IDs
     mapping(address => uint256[]) private institutionCredentials; // Maps institution address to their issued credential IDs
 
+    // Fees
+    uint256 public issuanceFee = 0.01 ether; // 0.01 AVAX
+    uint256 public revocationFee = 0.005 ether; // 0.005 AVAX
+
     // Events
     event InstitutionRegistered(address indexed institution);
     event InstitutionRemoved(address indexed institution);
@@ -43,6 +47,7 @@ contract AcademicCredentials is Ownable, Pausable {
         string ipfsHash
     );
     event CredentialRevoked(uint256 indexed credentialId, address indexed institution);
+    event FeesUpdated(uint256 newIssuanceFee, uint256 newRevocationFee);
 
     // Modifiers
     /// @notice Ensures caller is a registered institution
@@ -93,10 +98,11 @@ contract AcademicCredentials is Ownable, Pausable {
         bytes32 certificateHash,
         string calldata ipfsHash,
         string calldata metadata
-    ) external onlyInstitution whenNotPaused returns (uint256) {
+    ) external payable onlyInstitution whenNotPaused returns (uint256) {
         require(student != address(0), "Invalid student address");
         require(certificateHash != bytes32(0), "Invalid certificate hash");
         require(bytes(ipfsHash).length > 0, "Invalid IPFS hash");
+        require(msg.value >= issuanceFee, "Insufficient fee");
 
         uint256 credentialId = _credentialIds.current();
         
@@ -131,9 +137,11 @@ contract AcademicCredentials is Ownable, Pausable {
     /// @dev Only the issuing institution can revoke their own credentials
     function revokeCredential(uint256 credentialId) 
         external 
+        payable 
         onlyInstitution 
         credentialExists(credentialId) 
     {
+        require(msg.value >= revocationFee, "Insufficient fee");
         Credential storage credential = credentials[credentialId];
         require(credential.institution == msg.sender, "Not the issuing institution");
         require(!credential.isRevoked, "Credential already revoked");
@@ -213,5 +221,25 @@ contract AcademicCredentials is Ownable, Pausable {
         }
 
         return issuedIds;
+    }
+
+    // Fees Management
+    /// @notice Updates the issuance fee
+    /// @param newIssuanceFee New issuance fee in wei
+    function updateIssuanceFee(uint256 newIssuanceFee) external onlyOwner {
+        issuanceFee = newIssuanceFee;
+        emit FeesUpdated(newIssuanceFee, revocationFee);
+    }
+
+    /// @notice Updates the revocation fee
+    /// @param newRevocationFee New revocation fee in wei
+    function updateRevocationFee(uint256 newRevocationFee) external onlyOwner {
+        revocationFee = newRevocationFee;
+        emit FeesUpdated(issuanceFee, newRevocationFee);
+    }
+
+    /// @notice Withdraws all fees accumulated in the contract
+    function withdrawFees() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
     }
 }
