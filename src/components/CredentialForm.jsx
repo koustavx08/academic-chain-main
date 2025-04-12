@@ -14,7 +14,7 @@ const CredentialForm = () => {
   useEffect(() => {
     const fetchFees = async () => {
       if (contract) {
-        const fee = await contract.methods.issuanceFee().call();
+        const fee = await contract.issuanceFee();
         setIssuanceFee(ethers.utils.formatEther(fee));
       }
     };
