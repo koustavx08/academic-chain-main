@@ -1,141 +1,64 @@
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { PageTransition } from '../components/PageTransition'
+import React from 'react';
+import { useWeb3 } from '../context/Web3Context';
 
-/**
- * HomePage Component
- * Landing page showcasing the main features of Academic Chain
- */
-function HomePage() {
-  // Animation configuration for fade-in effect
-  const fadeIn = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3 }
-  }
-
-  // Feature cards data
-  const features = [
-    {
-      icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
-      title: "Secure Storage",
-      description: "Store credentials on immutable blockchain"
-    },
-    {
-      icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
-      title: "Easy Verification",
-      description: "Instant credential verification"
-    },
-    {
-      icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
-      title: "Tamper-proof",
-      description: "Cryptographically secured records"
-    }
-  ]
+const Home = () => {
+  const { account } = useWeb3();
 
   return (
-    <PageTransition>
-      <div className="relative min-h-screen">
-        {/* Hero Section with Gradient Background */}
-        <section className="relative overflow-hidden bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-800 dark:to-primary-900 text-white py-20">
-          {/* Hero Content Container */}
-          <motion.div
-            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            {/* Main Heading */}
-            <h1 className="text-4xl sm:text-5xl font-bold text-center mb-6">
-              Welcome to Academic Chain
-            </h1>
-            {/* Subtitle */}
-            <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-100">
-              Issue, manage, and verify academic credentials with confidence using blockchain technology
-            </p>
-
-            {/* Call-to-Action Buttons */}
-            <motion.div 
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-            >
-              {/* Primary CTA - Issue Credential */}
-              <Link 
-                to="/institution/upload-credential" 
-                className="btn bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105 transform transition-all"
-              >
-                Issue Credential
-              </Link>
-              {/* Secondary CTA - Verify Credential */}
-              <Link 
-                to="/verify" 
-                className="btn bg-transparent border-2 border-white hover:bg-white/10 hover:scale-105 transform transition-all"
-              >
-                Verify Credential
-              </Link>
-            </motion.div>
-          </motion.div>
-        </section>
-
-        {/* Features Section with Cards */}
-        <section className="py-20 bg-white dark:bg-gray-800 transition-colors duration-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Features Header */}
-            <motion.div 
-              className="text-center mb-16"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {/* Section Title with Animation */}
-              <motion.h2 
-                className="text-3xl font-bold text-gray-900 dark:text-white mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
-                Why Choose Academic Chain?
-              </motion.h2>
-              {/* Section Description */}
-              <motion.p 
-                className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-              >
-                Our platform provides secure, efficient, and transparent credential management
-              </motion.p>
-            </motion.div>
-
-            {/* Feature Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <motion.div
-                  key={feature.title}
-                  className="p-6 bg-gray-50 dark:bg-gray-700 rounded-xl"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
-                  {/* Feature Icon */}
-                  <div className="w-12 h-12 bg-primary-600 dark:bg-primary-500 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feature.icon} />
-                    </svg>
-                  </div>
-                  {/* Feature Title and Description */}
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
-                </motion.div>
-              ))}
+    <div className="max-w-4xl mx-auto">
+      <div className="text-center py-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-6">
+          Welcome to Academic Chain
+        </h1>
+        <p className="text-xl text-gray-600 mb-8">
+          A decentralized platform for issuing and verifying academic credentials
+        </p>
+        
+        {!account && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  Please connect your wallet to interact with the platform
+                </p>
+              </div>
             </div>
           </div>
-        </section>
-      </div>
-    </PageTransition>
-  )
-}
+        )}
 
-export default HomePage
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">For Students</h2>
+            <p className="text-gray-600 mb-4">
+              View and manage your academic credentials in one secure place
+            </p>
+            <ul className="list-disc list-inside text-gray-600">
+              <li>Access your credentials anytime, anywhere</li>
+              <li>Share your credentials securely</li>
+              <li>Verify the authenticity of your credentials</li>
+            </ul>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">For Institutions</h2>
+            <p className="text-gray-600 mb-4">
+              Issue and manage academic credentials efficiently
+            </p>
+            <ul className="list-disc list-inside text-gray-600">
+              <li>Issue credentials securely on the blockchain</li>
+              <li>Manage student records efficiently</li>
+              <li>Verify credentials instantly</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Home; 

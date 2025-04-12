@@ -1,233 +1,115 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useAuth } from '../contexts/AuthContext'
-import { getUserProfile } from '../services/userService'
-import { PageTransition } from '../components/PageTransition'
+import React, { useState, useEffect } from 'react';
+import { useWeb3 } from '../context/Web3Context';
+import { ethers } from 'ethers';
 
-/**
- * Dashboard Component
- * Main user interface showing credentials overview and recent activity
- */
-function Dashboard() {
-  // Authentication and user state
-  const { user, loading } = useAuth();
-  const [userProfile, setUserProfile] = useState(null);
-  const [activeTab, setActiveTab] = useState('issued') // Track active credentials tab
+const Dashboard = () => {
+  const { account, contract } = useWeb3();
+  const [credentials, setCredentials] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch user profile data on mount or user change
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user) {
-        const profile = await getUserProfile(user.uid);
-        setUserProfile(profile);
+    const fetchCredentials = async () => {
+      if (contract && account) {
+        try {
+          const studentCredentials = await contract.getStudentCredentials(account);
+          const credentialDetails = await Promise.all(
+            studentCredentials.map(async (credentialId) => {
+              const credential = await contract.getCredential(credentialId);
+              return {
+                id: credentialId,
+                institution: credential.institution,
+                certificateHash: credential.certificateHash,
+                ipfsHash: credential.ipfsHash,
+                metadata: JSON.parse(credential.metadata),
+                isRevoked: credential.isRevoked,
+              };
+            })
+          );
+          setCredentials(credentialDetails);
+        } catch (error) {
+          console.error('Error fetching credentials:', error);
+        } finally {
+          setLoading(false);
+        }
       }
     };
-    fetchUserProfile();
-  }, [user]);
 
-  // Animation configuration
-  const fadeIn = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6 }
+    fetchCredentials();
+  }, [contract, account]);
+
+  if (!account) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Please connect your wallet to view your credentials
+        </h2>
+      </div>
+    );
   }
 
-  // Mock statistics data
-  const stats = [
-    { label: 'Total Credentials', value: profile.credentials.length },
-    { label: 'Issued', value: profile.credentials.length },
-  ]
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading your credentials...</p>
+      </div>
+    );
+  }
 
   return (
-    <PageTransition>
-      <div className="relative min-h-screen p-6">
-        <motion.div
-          className="max-w-7xl mx-auto"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {/* Welcome Banner with animated background */}
-          <motion.div 
-            className="bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-800 dark:to-primary-900 rounded-2xl p-8 text-white mb-8 relative overflow-hidden"
-            {...fadeIn}
-          >
-            {/* Floating background circles animation */}
-            <motion.div
-              className="absolute inset-0 opacity-20"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.2 }}
-            >
-              {[...Array(3)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute bg-white rounded-full"
-                  style={{
-                    width: Math.random() * 200 + 50,
-                    height: Math.random() * 200 + 50,
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
-                  }}
-                  animate={{
-                    y: [0, Math.random() * 50 - 25],
-                    x: [0, Math.random() * 50 - 25],
-                  }}
-                  transition={{
-                    duration: Math.random() * 5 + 5,
-                    repeat: Infinity,
-                    repeatType: "reverse",
-                  }}
-                />
-              ))}
-            </motion.div>
-
-            {/* Welcome message with loading state */}
-            <div className="relative z-10">
-              <AnimatePresence mode="wait">
-                <motion.h1 
-                  key={user?.firstName || 'loading'} 
-                  className="text-3xl font-bold mb-2"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  Welcome back, {loading ? (
-                    <motion.span
-                      className="inline-block w-24 h-8 bg-white/20 rounded animate-pulse"
-                    />
-                  ) : (
-                    user?.firstName || 'User'
-                  )}!
-                </motion.h1>
-              </AnimatePresence>
-              <p className="text-primary-100 dark:text-primary-200">
-                Here's what's happening with your credentials
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Statistics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+    <div className="max-w-4xl mx-auto">
+      <div className="py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Credentials</h1>
+        
+        {credentials.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600">You don't have any credentials yet.</p>
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {credentials.map((credential) => (
+              <div
+                key={credential.id}
+                className={`bg-white p-6 rounded-lg shadow-md ${
+                  credential.isRevoked ? 'opacity-50' : ''
+                }`}
               >
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</h3>
-                <p className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">{stat.value}</p>
-              </motion.div>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {credential.metadata.name}
+                    </h3>
+                    <p className="text-gray-600 mt-1">
+                      Course: {credential.metadata.course}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Institution: {credential.institution.slice(0, 6)}...
+                      {credential.institution.slice(-4)}
+                    </p>
+                  </div>
+                  {credential.isRevoked && (
+                    <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                      Revoked
+                    </span>
+                  )}
+                </div>
+                <div className="mt-4">
+                  <a
+                    href={`https://ipfs.io/ipfs/${credential.ipfsHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    View on IPFS
+                  </a>
+                </div>
+              </div>
             ))}
           </div>
-
-          {/* Recent Activity Section */}
-          <motion.div 
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 mb-8"
-            {...fadeIn}
-          >
-            {/* Activity List with status indicators */}
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
-            <div className="space-y-4">
-              {[
-                { action: 'Credential Issued', date: '2 hours ago', status: 'success' },
-                { action: 'Verification Request', date: '5 hours ago', status: 'pending' },
-                { action: 'Credential Received', date: '1 day ago', status: 'success' }
-              ].map((activity, index) => (
-                <motion.div
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.status === 'success' ? 'bg-green-500' : 'bg-yellow-500'
-                    }`} />
-                    <div>
-                      <p className="text-gray-900 dark:text-white font-medium">{activity.action}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{activity.date}</p>
-                    </div>
-                  </div>
-                  <button className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
-                    View
-                  </button>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Credentials Section with Tabs */}
-          <motion.div 
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6"
-            {...fadeIn}
-          >
-            {/* Tab Navigation */}
-            <div className="flex space-x-4 border-b border-gray-200 dark:border-gray-700 mb-6">
-              {['issued', 'received'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-4 px-4 text-sm font-medium capitalize transition-colors relative ${
-                    activeTab === tab 
-                      ? 'text-primary-600 dark:text-primary-400' 
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                  }`}
-                >
-                  {tab} Credentials
-                  {/* Animated tab indicator */}
-                  {activeTab === tab && (
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 dark:bg-primary-400"
-                      layoutId="activeTab"
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Credentials List with animations */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-4"
-              >
-                {/* Sample credential cards with hover effects */}
-                {[1, 2, 3].map((item) => (
-                  <motion.div
-                    key={item}
-                    className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
-                    whileHover={{ scale: 1.01 }}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          Bachelor of Science in Computer Science
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-300">
-                          Issued on: March 15, 2024
-                        </p>
-                      </div>
-                      <button className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
-                        View Details
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
-        </motion.div>
+        )}
       </div>
-    </PageTransition>
-  )
-}
+    </div>
+  );
+};
 
-export default Dashboard 
+export default Dashboard; 
