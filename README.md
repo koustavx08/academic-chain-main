@@ -12,11 +12,28 @@ A decentralized platform for issuing and verifying academic credentials using bl
 
 ## Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js (>=18.0.0)
 - npm or yarn
 - MetaMask wallet
-- Hardhat (for local development)
+- Avalanche Fuji Testnet configured in MetaMask
 - IPFS (for storing credential data)
+
+## Network Configuration
+
+1. Add Avalanche Fuji Testnet to MetaMask:
+```
+Network Name: Avalanche Fuji Testnet
+New RPC URL: https://api.avax-test.network/ext/bc/C/rpc
+Chain ID: 43113
+Symbol: AVAX
+Explorer: https://testnet.snowtrace.io/
+```
+
+2. Get test AVAX from faucet:
+- Visit https://faucet.avax.network/
+- Enter your wallet address
+- Select "Fuji (C-Chain)" network
+- Request test tokens
 
 ## Installation
 
@@ -28,14 +45,18 @@ cd blockchain-education
 
 2. Install dependencies:
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
 3. Set up environment variables:
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory:
 ```
-REACT_APP_CONTRACT_ADDRESS=your_contract_address
-REACT_APP_NETWORK_ID=your_network_id
+PRIVATE_KEY=your_wallet_private_key
+FUJI_RPC_URL=https://api.avax-test.network/ext/bc/C/rpc
+SNOWTRACE_API_KEY=your_snowtrace_api_key
+PINATA_API_KEY=your_pinata_api_key
+PINATA_SECRET_KEY=your_pinata_secret_key
+VITE_CONTRACT_ADDRESS=your_deployed_contract_address
 ```
 
 ## Smart Contract Deployment
@@ -45,86 +66,87 @@ REACT_APP_NETWORK_ID=your_network_id
 npx hardhat compile
 ```
 
-2. Deploy the contract to your preferred network:
+2. Deploy to Fuji Testnet:
 ```bash
-npx hardhat run scripts/deploy.js --network <network_name>
+npx hardhat run scripts/deploy.js --network fuji
 ```
 
-3. Update the contract address in your `.env` file with the deployed address.
+3. Update the `VITE_CONTRACT_ADDRESS` in your `.env` file with the deployed address
 
 ## Running the Application
 
-1. Start the development server:
+1. Start the backend server:
 ```bash
-npm start
+npm run server
 ```
 
-2. Open your browser and navigate to `http://localhost:3000`
+2. In a new terminal, start the frontend development server:
+```bash
+npm run dev
+```
 
-## Usage
+3. Access the application:
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3000
 
-### For Institutions
+## Development Mode
 
-1. Connect your MetaMask wallet
-2. Navigate to the "Issue Credentials" page
-3. Fill in the student's wallet address and credential details
-4. Upload the credential document to IPFS
-5. Submit the transaction to issue the credential
+To run both frontend and backend concurrently:
+```bash
+npm run dev:all
+```
 
-### For Students
+## Testing
 
-1. Connect your MetaMask wallet
-2. View your credentials in the dashboard
-3. Share your credential ID with verifiers
-4. Access your credential documents through IPFS
+1. Run local hardhat node:
+```bash
+npx hardhat node
+```
 
-### Verifying Credentials
-
-1. Navigate to the "Verify" page
-2. Enter the credential ID
-3. View the verification result and credential details
-
-## Security Considerations
-
-- Always verify the contract address before interacting with the platform
-- Keep your private keys secure
-- Use a hardware wallet for large transactions
-- Verify the IPFS hash of credential documents
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Ethereum Foundation
-- IPFS
-- MetaMask
-- Hardhat
+2. Run tests:
+```bash
+npx hardhat test
+```
 
 ## Project Structure
 
 ```
 ├── contracts/           # Smart contracts
 ├── scripts/            # Deployment scripts
-├── src/               # Frontend source code
-│   ├── components/    # Vue components
-│   ├── router/        # Vue router configuration
-│   ├── store/         # Vuex store
+├── src/
+│   ├── components/    # React components
+│   ├── pages/         # Page components
+│   ├── context/       # React context
+│   ├── utils/         # Utility functions
 │   ├── assets/        # Static assets
-│   └── styles/        # Global styles
+│   └── styles/        # CSS styles
 ├── test/              # Test files
-├── docs/              # Documentation
-└── public/            # Public assets
+└── hardhat.config.js  # Hardhat configuration
 ```
+
+## Troubleshooting
+
+1. If npm install fails:
+```bash
+npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install --legacy-peer-deps
+```
+
+2. If MetaMask connection fails:
+- Ensure you're connected to Fuji Testnet
+- Reset MetaMask account (Settings > Advanced > Reset Account)
+
+## Security Considerations
+
+- Never commit your `.env` file
+- Use environment variables for sensitive data
+- Keep your private keys secure
+- Verify smart contract on Snowtrace after deployment
+
+## License
+
+MIT License
 
 ## Contact
 
